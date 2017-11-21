@@ -12,8 +12,12 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "iamseth/rhel-7.3"
-  config.vm.box_version = "1.0.0"
+  # config.vm.box = "centos/7"
+  #config.vm.box_version = "1708.01"
+  #config.vm.box = "iamseth/rhel-7.3"
+  config.vm.box = "bento/centos-7.2"
+  #config.ssh.username = "vagrant"
+  
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -24,7 +28,7 @@ Vagrant.configure("2") do |config|
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # NOTE: This will enable public access to the opened port
-  # config.vm.network "forwarded_port", guest: 9000, host: 9000
+   config.vm.network "forwarded_port", guest: 9000, host: 9000
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
@@ -67,8 +71,10 @@ Vagrant.configure("2") do |config|
    config.vm.provision "shell", inline: <<-SHELL
   #   apt-get update
   #   apt-get install -y apache2
-   sudo wget -O /etc/yum.repos.d/sonar.repo http://downloads.sourceforge.net/project/sonar-pkg/rpm/sonar.repo
-   sudo yum install sonar-6.4.1
-   SHELL
+  sudo wget -O /etc/yum.repos.d/sonar.repo http://downloads.sourceforge.net/project/sonar-pkg/rpm/sonar.repo
+  sudo yum install sonar-6.4 --assumeyes
+  sudo yum install java --assumeyes
+  /opt/sonar/bin/linux-x86-64/sonar.sh start
+  SHELL
   
 end
