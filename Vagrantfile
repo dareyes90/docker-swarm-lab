@@ -12,8 +12,11 @@ Vagrant.configure("2") do |config|
   owner: "vagrant",
   mount_options: ["dmode=777,fmode=777"]
 
-  #Exponer el puerto del servicio en el host
+  #Exponer el puerto  del servicio de jenkins en el host
   config.vm.network "forwarded_port", guest: 8080, host: 8080
+
+  #Exponer el puerto  del servicio de sonar en el host
+  config.vm.network "forwarded_port", guest: 9000, host: 9000
 
   # Configuracion de las capacidades virtuales
    config.vm.provider "virtualbox" do |v|
