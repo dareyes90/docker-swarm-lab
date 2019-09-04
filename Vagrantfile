@@ -19,7 +19,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 9000, host: 9000
 
   #Exponer el puerto  del servicio de sonar en el host
-  config.vm.network "forwarded_port", guest: 8081, host: 8081
+  config.vm.network "forwarded_port", guest: 8081, host: 8090
 
   # Configuracion de las capacidades virtuales
    config.vm.provider "virtualbox" do |v|
