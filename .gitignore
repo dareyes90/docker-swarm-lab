@@ -1,2 +1,3 @@
-# Ignorar modulos
-.vagrant/
+manager/.vagrant
+node1/.vagrant
+node2/.vagrant

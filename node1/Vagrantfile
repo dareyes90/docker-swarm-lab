@@ -1,0 +1,67 @@
+#Carpeta compartida
+FOLDER_SYNC         = "D:/repos"
+EXTERNAL_DISK_PATH  = 'C:/Temp/additional_hd.vmdk'
+VM_NAME             = 'swarm-worker-node-1'
+
+Vagrant.configure("2") do |config|
+
+  #Imagen base
+  config.vm.box = "centos/7"
+
+  #Nombre de la maquina
+  config.vm.hostname = VM_NAME
+
+  #Configuración de red
+  config.vm.network "public_network", ip: "192.168.1.67"
+  #config.vm.network "private_network", ip: "192.168.1.67"
+
+  #Compartir carpetas especificas
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+  config.vm.synced_folder FOLDER_SYNC, "/repos", type: "virtualbox",
+  owner: "vagrant",
+  mount_options: ["dmode=777,fmode=777"]
+
+  #Exponer puertos  de servicios
+  #config.vm.network "forwarded_port" , guest: 22, host: 2422, id: "ssh"
+  #config.vm.network "forwarded_port", guest: 80, host: 80
+
+  #Exponer el puerto  del servicio de sonar en el host
+  #config.vm.network "forwarded_port", guest: 9000, host: 9000
+
+  #Exponer el puerto  del servicio de sonar en el host
+  #config.vm.network "forwarded_port", guest: 8081, host: 8081
+
+  # Configuracion de las capacidades virtuales
+    config.vm.provider "virtualbox" do |v|
+      v.name   = VM_NAME
+      v.memory = "3072"
+      v.cpus   = 2
+      if not File.exist?(EXTERNAL_DISK_PATH)
+       v.customize ['createmedium', '--filename', EXTERNAL_DISK_PATH, '--size', 10 * 1024]#, '--format', VMDK]
+       v.customize ['storagectl', VM_NAME, '--name', "nfsHD", '--add', "sata"]
+      end
+      v.customize ['storageattach', VM_NAME, '--storagectl', "nfsHD", '--port', 1, '--device', 0, '--type', 'hdd', '--medium', EXTERNAL_DISK_PATH]
+    end
+
+  #Configuracion de la VM
+  config.vm.provision "shell" do |s|
+    s.privileged = false
+    s.inline =  <<-SHELL
+    #Ajuste de zona horaria
+    sudo timedatectl set-timezone America/Bogota
+    #Intalacion de docker
+    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum install -y unzip telnet docker-ce net-tools nfs-utils
+
+    #sudo sed -i "s|ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock|ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock -H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock|g" /lib/systemd/system/docker.service
+    #sudo mkfs.ext4 /dev/sdb
+    #sudo echo "/dev/sdb /var/lib/docker/volumes       ext4    defaults        0 0" >> /etc/fstab
+    #echo "/var/lib/docker/volumes 192.168.1.*(rw,sync,no_root_squash)" > /etc/exports
+    #Fuente: https://giovannicortes.com/desplegar-nfs-en-centos-07/
+    sudo systemctl enable docker
+    sudo systemctl enable rpcbind
+    sudo systemctl enable nfs-server
+	sudo usermod -aG docker vagrant
+  SHELL
+  end
+end

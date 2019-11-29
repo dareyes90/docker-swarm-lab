@@ -1,0 +1,54 @@
+#Carpeta compartida
+FOLDER_SYNC = "D:/repos"
+VM_NAME     = 'swarm-worker-node-2'
+
+Vagrant.configure("2") do |config|
+
+  #Imagen base
+  config.vm.box = "centos/7"
+
+  #Nombre de la maquina
+  config.vm.hostname = VM_NAME
+
+  #config.vm.boot_timeout = 10
+  #Compartir carpetas especificas
+  config.vm.network "public_network", ip: "192.168.1.68"
+  #config.vm.network "private_network", ip: "192.168.1.68"
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+  config.vm.synced_folder FOLDER_SYNC, "/repos", type: "virtualbox",
+  owner: "vagrant",
+  mount_options: ["dmode=777,fmode=777"]
+
+  #Exponer el puerto  del servicio de jenkins en el host
+  #config.vm.network "forwarded_port" , guest: 22, host: 2522, id: "ssh"
+  #config.vm.network "forwarded_port", guest: 8080, host: 9090
+
+  #Exponer el puerto  del servicio de sonar en el host
+  #config.vm.network "forwarded_port", guest: 9000, host: 9000
+
+  #Exponer el puerto  del servicio de sonar en el host
+  #config.vm.network "forwarded_port", guest: 8081, host: 8081
+
+  # Configuracion de las capacidades virtuales
+   config.vm.provider "virtualbox" do |v|
+     v.name   = VM_NAME
+     v.memory = "3072"
+     v.cpus = 2
+  end
+
+  #Configuracion de la VM
+  config.vm.provision "shell" do |s|
+    s.privileged = false
+    s.inline =  <<-SHELL
+    #Ajuste de zona horaria
+    sudo timedatectl set-timezone America/Bogota
+    #Intalacion de docker
+    sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    sudo yum install -y unzip telnet docker-ce net-tools
+    #sudo sed -i "s|ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock|ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock -H tcp://0.0.0.0:4243 -H unix:///var/run/docker.sock|g" /lib/systemd/system/docker.service
+    #sudo echo "192.168.1.67:/var/lib/docker/volumes /var/lib/docker/volumes  nfs rw 0  0" >> /etc/fstab
+    sudo systemctl enable docker
+	sudo usermod -aG docker vagrant
+  SHELL
+  end
+end
